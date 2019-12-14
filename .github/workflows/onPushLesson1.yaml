@@ -40,17 +40,15 @@ jobs:
       run: echo "failure"
   
   createPullRequest:
+    name: PullRequestAction
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Create Pull Request
-        id: cpr
-        uses: peter-evans/create-pull-request@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: 'Lesson1'
-          body: "please pull new changes in"
-          base: "topic1/lesson1"
+      - name: pull-request-action
+        uses: vsoch/pull-request-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_PREFIX: "topic1/"
+          PULL_REQUEST_BRANCH: "topic1/lesson1"
       - name: Check outputs
         run: |
           echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
