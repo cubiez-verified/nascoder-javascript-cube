@@ -1,2 +1,2 @@
 Javascript Cube
-i didi task1 1 2
+i didi task1 1 2 3
