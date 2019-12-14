@@ -45,9 +45,10 @@ jobs:
     steps:
       - name: pull-request-action
         uses: vsoch/pull-request-action@master
+        run: echo ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH_PREFIX: "topic1/"
+          BRANCH_PREFIX: "nascoder:topic1/"
           PULL_REQUEST_BRANCH: "topic1/lesson1"
       - name: Check outputs
         run: |
