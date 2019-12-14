@@ -33,13 +33,11 @@ jobs:
 
     - name: d
       if: success()
-      run: |
-      echo "success"
+      run: echo "success"
       
     - name: f
       if: failure()
-      run: |
-      echo "failure"
+      run: echo "failure"
   
   createPullRequest:
     runs-on: ubuntu-latest
