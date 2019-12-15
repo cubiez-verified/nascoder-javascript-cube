@@ -44,7 +44,11 @@ jobs:
     name: PullRequestAction
     runs-on: ubuntu-latest
     steps:
-      - name: echo secret
+      - name: pull-request-action
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo ${{ env.GITHUB_TOKEN }}
+        run: |
+        echo ${{ github }}
+        echo ${{ github.repository }}
+        echo ${{ github.branch }}
+        
