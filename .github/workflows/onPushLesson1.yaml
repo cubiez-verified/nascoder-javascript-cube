@@ -33,6 +33,8 @@ jobs:
 
     - name: d
       if: success()
+      env:
+        NODE_CUBE: ${{ github.event_path }}
       run: |
         echo "success"
         node .github/workflows/onPushLessonSuccess.js
