@@ -28,8 +28,8 @@ jobs:
     - name: npm install
       run: npm install
       
-    #- name: npm test
-    #  run: npm test
+    - name: npm test
+      run: npm test
 
     - name: d
       if: success()
@@ -48,7 +48,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo ${{ github }}
-          echo ${{ github.repository }}
-          echo ${{ github.branch }}
-        
+        curl --request POST \
+        --url https://api.github.com/repos/cubiez-verified/nascoder-javascript-cube/pulls \
+        --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+        --header 'content-type: application/json' \
+        --data '{
+          "title": "lesson 1 done",
+          "body": "This PR was automatically created by the GitHub Action workflow **${{ github.workflow }}**. \n\n The commit hash was: _${{ github.sha }}_.",
+          "head": "nascoder/topic1/lesson1",
+          "base": "topic1/lesson1"
+          }'
