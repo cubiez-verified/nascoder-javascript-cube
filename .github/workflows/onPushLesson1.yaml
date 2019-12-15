@@ -48,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-        echo ${{ github }}
-        echo ${{ github.repository }}
-        echo ${{ github.branch }}
+          echo ${{ github }}
+          echo ${{ github.repository }}
+          echo ${{ github.branch }}
         
