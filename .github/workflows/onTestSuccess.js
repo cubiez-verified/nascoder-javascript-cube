@@ -3,7 +3,7 @@ const shell = require("shelljs")
 const axios = require("axios");
 const Octokit = require("@octokit/rest");
 
-async function encrypt(repo, pass, branch) {
+async function encrypt(cHub, repo, pass, branch) {
     const algorithm = 'aes256';
     try {
         var cipher = crypto.createCipher(algorithm, pass)
@@ -27,7 +27,11 @@ async function encrypt(repo, pass, branch) {
             repo: _repo,
             path: `auth.enc?ref=master`
         });
-        if (re.result) {
+        
+        if (!re.result) {
+            return false;
+
+        } else {
             let resp = await axios.get(
                 `https://api.github.com/repos/${repo}/contents/auth.enc`
             )
@@ -47,8 +51,8 @@ async function encrypt(repo, pass, branch) {
             });
 
             await octokit.pulls.create({
-                owner,
-                repo,
+                cHub,
+                repo: _repo,
                 head: `${owner}:${branch}`,
                 base: branch,
                 title: branch,
@@ -59,7 +63,6 @@ async function encrypt(repo, pass, branch) {
 
             return true
         }
-        return false
 
     } catch (err) {
         throw err
@@ -67,7 +70,8 @@ async function encrypt(repo, pass, branch) {
 }
 
 const a = async (repo, gitToken, branch) => {
-    return await encrypt(repo, gitToken, branch)
+    const cHub = "cubiez-verified"
+    return await encrypt(cHub, repo, gitToken, branch)
 }
 
 a(process.argv[2], process.argv[3], process.argv[4]).then((res) => {
