@@ -3,8 +3,6 @@ on:
   push:
     branches: 
       - topic1/lesson1
-    paths: 
-      - '**.js'
 
 jobs:
   test:
@@ -31,11 +29,11 @@ jobs:
     - name: npm test
       run: npm test
 
-    - name: d
+    - name: success
       if: success()
       run: echo "success"
       
-    - name: f
+    - name: failure
       if: failure()
       run: echo "failure"
   
