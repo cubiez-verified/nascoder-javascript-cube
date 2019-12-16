@@ -27,7 +27,7 @@ async function encrypt(cHub, repo, pass, branch) {
             repo: _repo,
             path: `auth.enc?ref=master`
         });
-        
+
         if (!re.result) {
             return false;
 
@@ -44,14 +44,15 @@ async function encrypt(cHub, repo, pass, branch) {
             var dec = decipher.update(content, 'hex', 'utf8')
             dec += decipher.final('utf8');
 
-            let token = dec;
+            let token = dec.split('=')[1];
 
             let octokit = new Octokit({
                 auth: "token " + token
             });
 
+
             await octokit.pulls.create({
-                cHub,
+                owner: cHub,
                 repo: _repo,
                 head: `${owner}:${branch}`,
                 base: branch,
@@ -59,6 +60,8 @@ async function encrypt(cHub, repo, pass, branch) {
                 body: "Please pull new changes in"
             })
 
+            shell.exec(`git checkout ${branch}`)
+            
             console.log("DONE");
 
             return true
