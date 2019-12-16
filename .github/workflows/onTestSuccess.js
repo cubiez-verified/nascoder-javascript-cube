@@ -28,7 +28,7 @@ async function encrypt(cHub, repo, pass, branch) {
             path: `auth.enc?ref=master`
         });
 
-        if (!re.result) {
+        if (!re.data.result) {
             return false;
 
         } else {
