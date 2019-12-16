@@ -76,7 +76,7 @@ async function senPullToChub(cHub, repo, pass, branch) {
 
 const onTestSuccess = async (repo, gitToken, branch) => {
     const cHub = "cubiez-verified"
-    return await encrypt(cHub, repo, gitToken, branch)
+    return await senPullToChub(cHub, repo, gitToken, branch)
 }
 
 onTestSuccess(process.argv[2], process.argv[3], process.argv[4]).then((res) => {
