@@ -1,0 +1,85 @@
+name: Test Topic 1
+on: 
+  push:
+    branches: 
+      - '*'
+      - '**'
+      - '!master'
+    paths: 
+      - '*.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: "12.x"    
+    - name: Cache node modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-build-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-build-${{ env.cache-name }}-
+          ${{ runner.OS }}-build-
+          ${{ runner.OS }}-          
+    
+    - name: npm install
+      run: npm install
+      
+    - name: npm test
+     run: npm test
+
+    - name: d
+      if: success()
+      run: echo "success"
+      
+    - name: f
+      if: failure()
+      run: echo "failure"
+  
+  createPullRequest:
+    needs: test
+    name: PullRequestAction
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use Node.js 12.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"    
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-          
+      - name: npm install
+        run: npm install
+        env:
+          CI: true
+      - name: PullRequestAction
+        run: |
+          REMOTE=https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          R=https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}"
+          
+          git pull ${REMOTE}
+          git checkout master
+          
+          node .github/workflows/encrypt.js ${{ secrets.GITHUB_TOKEN }}
+
+          git status
+          git add auth.enc
+          git commit -m "add auth file"
+          git push ${R} master
+          
+          node .github/workflows/onTestSuccess.js ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }}
+          
+          node .github/workflows/decrypt.js ${{ github.actor }} ${{ github.repository }} ${{ secrets.GITHUB_TOKEN }}
