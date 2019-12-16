@@ -3,7 +3,7 @@ const shell = require("shelljs")
 const axios = require("axios");
 const Octokit = require("@octokit/rest");
 
-async function encrypt(pass) {
+async function encrypt(repo, pass) {
     const algorithm = 'aes256';
     try {
         var cipher = crypto.createCipher(algorithm, pass)
@@ -63,10 +63,10 @@ async function encrypt(pass) {
     }
 }
 
-const a = async (gitToken) => {
-    return await encrypt(gitToken)
+const a = async (repo, gitToken) => {
+    return await encrypt(repo, gitToken)
 }
 
-a(process.argv[2]).then((res) => {
+a(process.argv[2], process.argv[3]).then((res) => {
     console.log(res)
 })
