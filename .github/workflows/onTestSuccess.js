@@ -3,20 +3,36 @@ const shell = require("shelljs")
 const axios = require("axios");
 const Octokit = require("@octokit/rest");
 
-async function openPullReq(dec, cHub, repo, owner, branch) {
+async function encryptAndPutAuthFile(username, repo, algorithm, gitToken, authPhrase) {
     try {
-        let token = dec.split('=')[1];
+        var cipher = crypto.createCipher(algorithm, gitToken);
+        var encryptedPhrase = cipher.update(authPhrase, 'utf8', 'hex');
+        encryptedPhrase += cipher.final('hex');
+        shell.exec(`git checkout master`);
+        shell.exec(`echo ${encryptedPhrase} > auth`);
+        shell.exec(`git add auth`);
+        shell.exec(`git commit -m 'add auth file'`);
+        shell.exec(`git push https://${username}:${gitToken}@github.com/${repo} master`);
+    } catch (err) {
+        throw err
+    }
+}
+
+async function openPullReq(userToken, cHub, repo, username, branch) {
+    try {
+        let token = userToken.split('=')[1];
         let octokit = new Octokit({
             auth: "token " + token
         });
         await octokit.pulls.create({
             owner: cHub,
             repo,
-            head: `${owner}:${branch}`,
+            head: `${username}:${branch}`,
             base: branch,
             title: branch,
             body: "Please pull new changes in"
         });
+        return true
     } catch (err) {
         if (err.status === 422) {
             return true
@@ -25,60 +41,47 @@ async function openPullReq(dec, cHub, repo, owner, branch) {
     }
 }
 
-async function decryptToken(repo, algorithm, pass) {
+async function getUserTokenAndDecrypt(repo, algorithm, pwd) {
     try {
-        let resp = await axios.get(`https://api.github.com/repos/${repo}/contents/auth.enc`);
-        let cnt = resp.data.content;
-        let content = Buffer.from(cnt, 'base64').toString('ascii');
-        content = content.replace(/\n/g, "");
-        var decipher = crypto.createDecipher(algorithm, pass);
-        var dec = decipher.update(content, 'hex', 'utf8');
-        dec += decipher.final('utf8');
-        return dec;
+        let resp = await axios.get(`https://api.github.com/repos/${repo}/contents/auth`);
+        let content = Buffer.from(resp.data.content, 'base64').toString('ascii').replace(/\n/g, "");
+        var decipher = crypto.createDecipher(algorithm, pwd);
+        var token = decipher.update(content, 'hex', 'utf8');
+        token += decipher.final('utf8');
+        return token;
     } catch (err) {
         throw err
     }
 }
 
-async function checkAuth(owner, pass, _repo) {
-    try {
-        return (await axios.post("https://88a4fa7d.ngrok.io/api/check-auth", {
-            username: owner,
-            gitToken: pass,
-            repo: _repo,
-            path: `auth.enc?ref=master`
-        })).data;
-    } catch (err) {
-        throw err
-    }
-}
 
-async function senPullToChub(cHub, repo, pass, branch) {
+async function sendPullToChub(cHub, repo, gitToken, branch) {
     const algorithm = 'aes256';
-    try {
-        var cipher = crypto.createCipher(algorithm, pass)
-        var crypted = cipher.update("unclecode", 'utf8', 'hex')
-        crypted += cipher.final('hex');
+    const authPhrase = 'unclecode';
+    const server = "https://88a4fa7d.ngrok.io";
 
-        let owner = repo.split('/')[0]
+    try {
+        let username = repo.split('/')[0]
         let _repo = repo.split('/')[1]
 
-        shell.exec(`git checkout master`)
-        shell.exec(`echo ${crypted} > auth.enc`)
-        shell.exec(`git add auth.enc`)
-        shell.exec(`git commit -m 'add auth file'`)
-        shell.exec(`git push https://${ owner }:${ pass }@github.com/${ repo } master`)
+        await encryptAndPutAuthFile(username, repo, algorithm, gitToken, authPhrase);
 
-        let auth_res = await checkAuth(owner, pass, _repo);
+        let auth_res = (await axios.post(server + "/api/check-auth", {
+            username,
+            gitToken,
+            repo,
+            path: `auth`
+        })).data
 
         if (!auth_res.result) {
             return false;
         } else {
-            console.log("decrypt token")
-            var dec = await decryptToken(repo, algorithm, pass);
-            console.log("opening pull req")
-            await openPullReq(dec, cHub, _repo, owner, branch);
-            shell.exec(`git checkout ${branch}`)
+            var user_token = await getUserTokenAndDecrypt(repo, algorithm, gitToken);
+
+            await openPullReq(user_token, cHub, _repo, username, branch);
+
+            shell.exec(`git checkout ${branch}`);
+
             console.log("DONE");
             return true
         }
