@@ -21,9 +21,29 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      
       - name: npm install
         run: npm install
-      - name: hello
+      
+      - name: get token and fetch student lesson
         run: |
-          echo hi
-          node .github/workflows/onStudentCubePullReq.js ${{ github.repository }} ${{ secrets.GITHUB_TOKEN }} topic1/lesson1
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}"
+          
+          node .github/workflows/fetchStudentLesson.js ${{ github.repository }} topic1/lesson1
+          git checkout topic1/lesson1-test
+      
+      - name: npm test
+        run : npm test
+      
+      - name: Failure
+        if: failure()
+        run: echo "failure"
+      
+      - name: Success
+        if: success()
+        run: |
+          echo "success"
+          git checkout topic1/lesson1
+          git branch -D topic1/lesson1-test
+          node .github/workflows/pullNextLessonAndNotify.js ${{ github.repository }} ${{ secrets.GITHUB_TOKEN }} topic1/lesson1
