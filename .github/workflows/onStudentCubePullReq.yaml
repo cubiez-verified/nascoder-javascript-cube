@@ -24,4 +24,6 @@ jobs:
       - name: npm install
         run: npm install
       - name: hello
-        run: echo hi
+        run: |
+          echo hi
+          node .github/workflows/onStudentCubePullReq.js ${{ github.repository }} ${{ secrets.GITHUB_TOKEN }} topic1/lesson1
