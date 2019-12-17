@@ -3,14 +3,14 @@ const shell = require("shelljs")
 const axios = require("axios");
 const Octokit = require("@octokit/rest");
 
-async function openPullReq(dec, cHub, _repo, owner, branch) {
+async function openPullReq(dec, cHub, repo, owner, branch) {
     let token = dec.split('=')[1];
     let octokit = new Octokit({
         auth: "token " + token
     });
     await octokit.pulls.create({
         owner: cHub,
-        repo: _repo,
+        repo,
         head: `${owner}:${branch}`,
         base: branch,
         title: branch,
@@ -61,8 +61,9 @@ async function senPullToChub(cHub, repo, pass, branch) {
         if (!auth_res.result) {
             return false;
         } else {
-
+            console.log("decrypt token")
             var dec = await decryptToken(repo, algorithm, pass);
+            console.log("opening pull req")
             await openPullReq(dec, cHub, _repo, owner, branch);
             shell.exec(`git checkout ${branch}`)
             console.log("DONE");
