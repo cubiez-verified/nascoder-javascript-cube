@@ -2,7 +2,7 @@ const shell = require("shelljs")
 
 const fetchLesson = async (repo, branch) => {
 	console.log("Fetch student lesson branch...")
-	const _silent = fail;
+	const _silent = false;
     const studentRepoName = repo.split('/')[1];
 	const studentUsername = studentRepoName.split('-')[0];
 	// fetch branch into branch-test
