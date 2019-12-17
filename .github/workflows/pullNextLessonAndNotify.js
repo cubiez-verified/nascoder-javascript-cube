@@ -101,7 +101,7 @@ async function pullNextLessonIntoChub(branch, lessonBranch, masterToken, qHub, q
         shell.exec(`git add --all`, { silent: _silent });
         shell.exec(`git commit -m 'Add next lesson branch'`, { silent: _silent });
         shell.exec(`git push https://${cHub}:${masterToken}@github.com/${repo} ${lessonBranch}`);
-        shell.exec(`git checkout ${branch}`, { silent: _silent });
+        shell.exec(`git checkout ${branch} --`, { silent: _silent });
 
     } catch (err) {
         throw err

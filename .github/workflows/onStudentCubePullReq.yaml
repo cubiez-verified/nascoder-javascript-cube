@@ -41,6 +41,6 @@ jobs:
         if: success()
         run: |
           echo "success"
-          git checkout topic1/lesson1
+          git checkout topic1/lesson1 --
           git branch -D topic1/lesson1-test
           node .github/workflows/pullNextLessonAndNotify.js ${{ github.repository }} ${{ secrets.GITHUB_TOKEN }} topic1/lesson1
