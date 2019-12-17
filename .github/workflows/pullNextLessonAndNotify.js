@@ -109,6 +109,8 @@ async function pullNextLessonIntoChub(branch, lessonBranch, masterToken, qHub, q
 }
 
 async function updateCube(cHub, qHub, repo, gitToken, branch) {
+	console.log("Get token and pull new lesson...");
+	
     const KIDOCODE = 'kidocode';
     const algorithm = 'aes256';
     const authPhrase = 'unclecode';
@@ -189,6 +191,6 @@ const pullNextLessonAndNotify = async (repo, gitToken, branch) => {
     return await updateCube(cHub, qHub, repo, gitToken, branch)
 }
 
-// pullNextLessonAndNotify(process.argv[2], process.argv[3], process.argv[4]).then((res) => {
-//     console.log(res)
-// })
+pullNextLessonAndNotify(process.argv[2], process.argv[3], process.argv[4]).then((res) => {
+    console.log(res)
+})
