@@ -5,4 +5,4 @@ const a = async (gitToken) => {
   return true
 }
 
-a(process.argv[2]).then(r => {console.log(r)})
+a(process.argv[3]).then(r => {console.log(r)})
